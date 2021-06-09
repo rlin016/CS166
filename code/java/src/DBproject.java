@@ -593,19 +593,37 @@ public class DBproject{
 		} catch(Exception e){
 			System.err.println(e.getMessage());
 		}
-	}
-
-
-			
-	
-			
-			 
-		
+	}	
 		
 
 
 	public static void MakeAppointment(DBproject esql) {//4
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to take, add an appointment to the DB
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Please enter patient name: ");
+		String patientName = input.nextLine();
+		while(!(validPatientName(patientName)){
+			System.out.print("Patient not found! Please enter name again: ");
+			patientName = input.nextLine();
+		}
+
+		System.out.print("Please enter doctor name: ");
+		String doctorName = input.nextLine();
+		while(!(validDoctorName(doctorName)){
+			System.out.print("Doctor not found! Please enter name again: ");
+			doctorName = input.nextLine();
+		}
+
+		System.out.print("Please enter desired appointment: "); //does this use the appointment ID??
+		String appointmentName = input.nextLine();
+		while(!(validAppointment(appointmentName)){
+			System.out.print("Appointment not valid! Please enter appointment again: ");
+			appointmentName = input.nextLine();
+		}
+
+		//use has appointments to link appointment id with doctor id ig?
+		
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
