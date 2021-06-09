@@ -24,6 +24,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.util.Scanner;
+
 /**
  * This class defines a simple embedded SQL utility class that is designed to
  * work with PostgreSQL JDBC drivers.
@@ -301,6 +303,59 @@ public class DBproject{
 	}
 
 	public static void AddPatient(DBproject esql) {//2
+		Scanner input = new Scanner(System.in);
+		String patientName;
+		do{
+			System.out.print("Enter name: ");
+			patientName = input.nextLine();
+		
+	
+			if(!isCharInput(patientName)){
+				System.out.println("Invalid name! No numbers or symbols!");
+			}
+		}while(!isCharInput(patientName));
+		
+
+		char patientGender = 'X';
+		do{
+			System.out.print("Enter gender (F/M): ");
+			patientGender = input.next().charAt(0);
+			input.nextLine();
+			if(patientGender == 'f' || patientGender == 'F'){
+				patientGender = 'F';
+			}
+			else if(patientGender == 'm' || patientGender == 'M'){
+				patientGender = 'M';
+			}
+			else{
+				patientGender = 'X';
+				System.out.println("Invalid gender! Please choose f or m!");
+			}
+		} while(patientGender == 'X');
+	
+		int patientAge = -1;
+		do{
+			System.out.print("Enter age: ");
+			try{
+				patientAge = Integer.parseInt(input.nextLine());
+			} catch(Exception e){
+				System.err.println("Invalid age! Please choose a number!");
+			}
+		} while(patientAge == -1);
+
+		System.out.print("Enter address: ");
+		String patientAddress = input.nextLine();
+
+		try{	
+			System.out.println("Updating now...");
+			String query = "insert into patient values ((select count(*) as yes from patient)+1, '" 
+					+ patientName + "', '" + String.valueOf(patientGender) + "', " 
+					+ Integer.toString(patientAge) + ", '" + patientAddress + "', 0)";
+			esql.executeUpdate(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+					
 	}
 
 	public static void AddAppointment(DBproject esql) {//3
@@ -326,5 +381,24 @@ public class DBproject{
 	
 	public static void FindPatientsCountWithStatus(DBproject esql) {//8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC, AV, WL) and list that number per doctor.
+	}
+	public static boolean isCharInput(String input){
+		input = input.toLowerCase();
+		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+		int count = 0;
+		for(int i = 0; i < input.length(); i++){
+			char x = input.charAt(i);
+			for(int j = 0; j < search.length; j++){
+				if(x == search[j]){
+					count++;
+				}
+			}
+		}
+		if(count == input.length()){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 }
