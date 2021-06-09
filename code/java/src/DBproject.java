@@ -448,8 +448,103 @@ public class DBproject{
 					
 	}
 
-	public static void AddAppointment(DBproject esql) {//3
+	public static boolean getValidDate(String input){
+		if(input.length() < 10){
+			return false;
+		}
+		char[] charArray = input.toCharArray();
+	
+		for(int i = 0; i < 4; i++){
+			if((charArray[i] <= '0') && (charArray[i] >= '9')){
+				return false;
+			}
+		}
+		for(int i = 8; i < 10; i++){
+			if((charArray[i] <= '0') && (charArray[i] >= '9')){
+				return false;
+			}
+		}
+		if((charArray[4] != '-') || (charArray[7] != '-')){
+			return false;
+		}
+		return true;
 	}
+			
+	
+	public static boolean getValidTimeslot(String input){
+		return true;
+	}
+	
+	public static boolean getValidAppointmentStatus(String input){
+		input = input.toLowerCase();
+
+		if(input == "pa" ||
+		   input == "ac" ||
+		   input == "av" ||
+		   input == "wl"){
+			return true;
+		}
+		return false;
+	}
+	
+	public static String getValidAppointmentID(){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select MAX(appnt_ID) from appointment";
+			resultset = esql.executeQueryAndReturnResult(query);
+		}catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+	
+		
+	}
+				
+
+	public static void AddAppointment(DBproject esql) {//3
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter date of appointment in format (YYYY-MM-DD): ");
+		String appointmentDate = input.nextLine();
+		
+		while(!getValidDate(appointmentDate)){
+			System.out.print("Invalid date! Please follow format (YYYY-MM-DD): ");
+			appointmentDate = input.nextLine();
+		}
+
+		System.out.print("Enter time_slot: ");
+		String timeSlotInput = input.nextLine();
+		
+		while(!getValidTimeslot(timeSlotInput)){
+			System.out.print("Invalid time slot! Please pick a different time slot: ");
+			timeSlotInput = input.nextLine();
+		}
+
+		System.out.print("Enter appointment status (PA / AC / AV / WL): ");
+		String appointmentStatus = input.nextLine();
+		
+		while(!getValidAppointmentStatus(appointmentStatus)){
+			System.out.print("Invalid appointment status! Please follow format (PA / AC / AV / WL): ");
+			appointmentStatus = input.nextLine();
+		} 
+		
+		try{
+			String query = "insert into appointment " +
+				       "values (" + getValidAppointmentID() + ", '" + appointmentDate + "', '" +
+				       timeSlotInput + "', '" + appointmentStatus + "')";
+			esql.executeUpdate(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+	}
+
+
+			
+	
+			
+			 
+		
+		
 
 
 	public static void MakeAppointment(DBproject esql) {//4
