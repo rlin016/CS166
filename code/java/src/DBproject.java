@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -297,7 +298,96 @@ public class DBproject{
 		return input;
 	}//end readChoice
 
+	public static boolean validString(String str) {
+		if (str.length() == 0) {
+			return false;
+		}
+
+		str = str.toLowerCase();
+		char[] charArray = str.toCharArray();
+
+		for (int i = 0; i < charArray.length; ++i) {
+			if (!(charArray[i] >= 'a' && charArray[i] <= 'z') && (charArray[i] != ' ')) {
+				return false;
+			}
+		} 
+
+		return true;
+	}
+
+	public static boolean validDepartment(DBproject esql, String id) {
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try {
+			String query = "select dept_ID from department";
+			resultset = esql.executeQueryAndReturnResult(query);		
+		} catch(Exception e) {
+         		System.err.println(e.getMessage());
+      		}
+
+		for (List<String> did : resultset) {
+			for (int i = 0; i < did.size(); ++i) {
+				if ((id).equals(did.get(i))) {
+					return true;
+				}
+			}
+		}	
+
+		return false;
+	}
+
+	public static String getValidDoctorID(DBproject esql) {
+		List<List<String>> resultset = new ArrayList<List<String>>();
+
+		try {
+			String query = "SELECT MAX(doctor_ID) FROM Doctor";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+		return resultset.get(0).get(0);
+	}
+
 	public static void AddDoctor(DBproject esql) {//1
+		String lastID = getValidDoctorID(esql);
+		int newID = Integer.parseInt(lastID) + 1;
+
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter Doctor name: ");
+		String dname = in.nextLine();
+		
+		while (!validString(dname)) {
+			System.out.println("Invalid input, please re-enter Doctor name: ");
+			dname = in.nextLine();
+		}
+
+		System.out.println("Enter Doctor specialty: ");
+		String dspecialty = in.nextLine();
+		
+		while (!validString(dspecialty)) {
+			System.out.println("Invalid input, please re-enter Doctor specialty: ");
+			dspecialty = in.nextLine();
+		}
+
+		System.out.println("Enter department id: ");
+		String did = in.nextLine();
+		
+		while (!validDepartment(esql, did)) {
+			System.out.println("Invalid input, please re-enter Department id: ");
+			did = in.nextLine();
+		}
+
+		try {
+			String query = "INSERT INTO Doctor(doctor_ID, name, specialty, did) " + 
+					"VALUES ('" + newID + "', '" + dname + "', '" + dspecialty + "', '" + did + "')"; 
+			esql.executeUpdate(query);
+
+			String query2 = "select * from Doctor where doctor_ID = " + newID;
+			int rowcount = esql.executeQueryAndPrintResult(query2);
+			System.out.println(rowcount);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                } 				
 	}
 
 	public static void AddPatient(DBproject esql) {//2
