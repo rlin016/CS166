@@ -448,8 +448,160 @@ public class DBproject{
 					
 	}
 
-	public static void AddAppointment(DBproject esql) {//3
+	public static boolean getValidDate(String input){
+		if(input.length() != 10){
+			return false;
+		}
+		String year, month, day = month = year =  "";
+		char[] charArray = input.toCharArray();
+
+
+
+		if(!(charArray[4] == '-') && !(charArray[7] == '-')){
+			return false;
+		}
+		for(int i = 0; i < 4; i++){
+			year = year + input.charAt(i);
+		}
+		try{
+			Integer.parseInt(year);
+		} catch(Exception e){
+		//	System.out.println("Not an integer(year)!");
+			return false;
+		}
+
+		for(int i = 5; i <= 6; i++){
+			month = month + input.charAt(i);
+		}
+		try{
+			Integer.parseInt(month);
+		} catch(Exception e){
+		//	System.out.println("Not an integer (month)!");		
+			return false;
+		}
+		if(Integer.parseInt(month) > 12 || Integer.parseInt(month) < 1){
+			return false;
+		}
+
+
+			
+		for(int i = 8; i <= 9; i++){
+			day = day + input.charAt(i);
+		}
+		try{
+			Integer.parseInt(day);
+		} catch(Exception e){
+		//	System.out.println("Not an integer(day!)");
+			return false;
+		}		
+	//	System.out.println(Integer.parseInt(month));
+		int daysInMonth = 0;
+		switch(Integer.parseInt(month)){
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+			case 8:
+			case 10:
+			case 12:
+				daysInMonth = 31;				
+				break;
+			case 2:
+				daysInMonth = 28;
+				break;
+			case 4:
+			case 6:
+			case 9:
+			case 11:
+				daysInMonth = 30;
+				break;
+			default:
+				daysInMonth = -1;
+			//	System.out.println("Error! Invalid month; cannot select proper days of the month");
+				return false;
+		}
+		if(Integer.parseInt(day) > daysInMonth || Integer.parseInt(day) < 1){
+			return false;
+		}
+		return true;		
 	}
+			
+	
+	public static boolean getValidTimeslot(String input){
+		return true;
+	}
+	
+	public static boolean getValidAppointmentStatus(String input){
+
+		if(input.equals("PA") ||
+		   input.equals("AC") ||
+		   input.equals("AV") ||
+		   input.equals("WL")){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	
+	public static String getValidAppointmentID(DBproject esql){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select MAX(appnt_ID) from appointment";
+			resultset = esql.executeQueryAndReturnResult(query);
+		}catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		return resultset.get(0).get(0) + 1;		
+	}
+				
+
+	public static void AddAppointment(DBproject esql) {//3
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter date of appointment in format (YYYY-MM-DD): ");
+		String appointmentDate = input.nextLine();
+		
+		while(!getValidDate(appointmentDate)){
+			System.out.print("Invalid date! Please follow format (YYYY-MM-DD): ");
+			appointmentDate = input.nextLine();
+		}
+
+		System.out.print("Enter desired time slot: ");
+		String timeSlotInput = input.nextLine();
+		
+		while(!getValidTimeslot(timeSlotInput)){
+			System.out.print("Invalid time slot! Please pick a different time slot: ");
+			timeSlotInput = input.nextLine();
+		}
+
+		System.out.print("Enter appointment status (PA / AC / AV / WL): ");
+		String appointmentStatus = (input.nextLine()).toUpperCase();
+		
+		while(!getValidAppointmentStatus(appointmentStatus)){
+			System.out.print("Invalid appointment status! Please follow format (PA / AC / AV / WL): ");
+			appointmentStatus = (input.nextLine()).toUpperCase();
+		} 
+		
+	
+		System.out.println("Updating appointment...");
+		try{
+			String query = "insert into appointment " +
+				       "values (" + getValidAppointmentID(esql) + ", '" + appointmentDate + "', '" +
+				       timeSlotInput + "', '" + appointmentStatus + "')";
+			esql.executeUpdate(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+	}
+
+
+			
+	
+			
+			 
+		
+		
 
 
 	public static void MakeAppointment(DBproject esql) {//4
