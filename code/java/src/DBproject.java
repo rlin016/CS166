@@ -337,7 +337,7 @@ public class DBproject{
 		return false;
 	}
 
-	public static String getValidDoctorID(DBproject esql) {
+	public static String getValidDoctorID(DBproject esql) { // should change to newDoctorID
 		List<List<String>> resultset = new ArrayList<List<String>>();
 
 		try {
@@ -349,6 +349,27 @@ public class DBproject{
 
 		return resultset.get(0).get(0);
 	}
+
+	public static boolean validDoctor(DBproject esql, String id) {
+                List<List<String>> resultset = new ArrayList<List<String>>();
+                try {
+                        String query = "select doctor_ID from doctor";
+                        resultset = esql.executeQueryAndReturnResult(query);
+                } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+                for (List<String> did : resultset) {
+                        for (int i = 0; i < did.size(); ++i) {
+                                if ((id).equals(did.get(i))) {
+                                        return true;
+                                }
+                        }
+                }
+
+                return false;
+        }
+
 
 	public static void AddDoctor(DBproject esql) {//1
 		String lastID = getValidDoctorID(esql);
@@ -595,21 +616,47 @@ public class DBproject{
 		}
 	}
 
-
-			
-	
-			
-			 
-		
-		
-
-
 	public static void MakeAppointment(DBproject esql) {//4
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to take, add an appointment to the DB
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
 		// For a doctor ID and a date range, find the list of active and available appointments of the doctor
+		
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter Doctor ID: ");
+		String docid = in.nextLine();
+
+		while (!validDoctor(esql, docid)) {
+			System.out.println("Invalid input, please re-enter Doctor ID: ");
+                        docid = in.nextLine();			
+		}	
+
+		System.out.println("Enter a date range in the format YYYY-MM-DD:\n Date 1: ");
+                String first = in.nextLine();
+
+		while(!getValidDate(first)) {
+                        System.out.print("Invalid date! Please follow format (YYYY-MM-DD)! Date 1: ");
+                        first = in.nextLine();
+                }
+			
+		System.out.println("Date 2: ");				
+		String second = in.nextLine();
+
+                while(!getValidDate(first)) {
+                        System.out.print("Invalid date! Please follow format (YYYY-MM-DD)! Date 2: ");
+                        second = in.nextLine();
+                }
+	
+		System.out.println("List of active and available appointments for Doctor ID " + docid + ": ");
+
+		try {
+			String query = "SELECT appnt_ID FROM appointment LEFT JOIN has_appointment ON appointment.appnt_ID = has_appointment.appt_id WHERE (appointment.adate >= '" + first + "' AND appointment.adate <= '" + second + "') AND (appointment.status = 'AC' OR appointment.status = 'AV') AND (has_appointment.doctor_id = " + docid + ")";
+			int rc = esql.executeQueryAndPrintResult(query);
+			System.out.println("Row count: " + rc);
+		} catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
 	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
