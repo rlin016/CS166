@@ -630,18 +630,19 @@ public class DBproject{
 			return;	
 		}
 		
-		System.out.println("Hello!");
+		//System.out.println("Hello!");
 
-		String query = "update (select * from appointment join has_appointment where appnt_id = appt_id) set status = 'AC' where appnt_ID = " + appointmentID +  " and status != 'AC' and doctor_id = " + doctorID;
+		String query = "update appointment set status = 'AC' " +
+				"where (select appnt_id from appointment " +
+				"inner join has_appointment on " +
+				"appointment.appnt_id = has_appointment.appt_id and doctor_id = " + doctorID + ") = " + appointmentID;
 		try{
 			esql.executeUpdate(query);
 		}
 		catch(Exception e){
+		//	System.out.println("Problem here!");
 			System.err.println(e.getMessage());
 		}
-		
-	
-		//use has appointments to link appointment id with doctor id ig	
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
