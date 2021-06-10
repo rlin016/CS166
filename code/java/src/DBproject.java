@@ -595,7 +595,15 @@ public class DBproject{
 		}
 	}	
 		
-
+	public static boolean validPatient(String input){
+		return true;
+	}
+	public static boolean validDoctor(String input){
+		return true;
+	}
+	public static boolean validAppointment(String input){
+		return true;
+	}
 
 	public static void MakeAppointment(DBproject esql) {//4
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to take, add an appointment to the DB
@@ -603,27 +611,37 @@ public class DBproject{
 		
 		System.out.print("Please enter patient name: ");
 		String patientName = input.nextLine();
-		while(!(validPatientName(patientName)){
-			System.out.print("Patient not found! Please enter name again: ");
-			patientName = input.nextLine();
+		if(!(validPatient(patientName))){
+			System.out.print("Patient not found! Please follow on-screen instructions: ");
+			AddPatient(esql);		
 		}
 
-		System.out.print("Please enter doctor name: ");
-		String doctorName = input.nextLine();
-		while(!(validDoctorName(doctorName)){
-			System.out.print("Doctor not found! Please enter name again: ");
-			doctorName = input.nextLine();
+		System.out.print("Please enter doctor ID: ");
+		String doctorID = input.nextLine();
+		if(!(validDoctor(doctorID))){
+			System.out.print("Doctor ID not valid! Query failed");
+			return;
 		}
 
-		System.out.print("Please enter desired appointment: "); //does this use the appointment ID??
-		String appointmentName = input.nextLine();
-		while(!(validAppointment(appointmentName)){
-			System.out.print("Appointment not valid! Please enter appointment again: ");
-			appointmentName = input.nextLine();
+		System.out.print("Please enter desired appointment ID: "); //does this use the appointment ID??
+		String appointmentID = input.nextLine();
+		if(!(validAppointment(appointmentID))){
+			System.out.print("Appointment ID not valid! Query failed.");
+			return;	
 		}
-
-		//use has appointments to link appointment id with doctor id ig?
 		
+		System.out.println("Hello!");
+
+		String query = "update (select * from appointment join has_appointment where appnt_id = appt_id) set status = 'AC' where appnt_ID = " + appointmentID +  " and status != 'AC' and doctor_id = " + doctorID;
+		try{
+			esql.executeUpdate(query);
+		}
+		catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+	
+		//use has appointments to link appointment id with doctor id ig	
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
