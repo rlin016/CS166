@@ -337,7 +337,7 @@ public class DBproject{
 		return false;
 	}
 
-	public static String getValidDoctorID(DBproject esql) {
+	public static String getValidDoctorID(DBproject esql) { // should change to newDoctorID
 		List<List<String>> resultset = new ArrayList<List<String>>();
 
 		try {
@@ -349,6 +349,27 @@ public class DBproject{
 
 		return resultset.get(0).get(0);
 	}
+
+	public static boolean validDoctor(DBproject esql, String id) {
+                List<List<String>> resultset = new ArrayList<List<String>>();
+                try {
+                        String query = "select doctor_ID from doctor";
+                        resultset = esql.executeQueryAndReturnResult(query);
+                } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+                for (List<String> did : resultset) {
+                        for (int i = 0; i < did.size(); ++i) {
+                                if ((id).equals(did.get(i))) {
+                                        return true;
+                                }
+                        }
+                }
+
+                return false;
+        }
+
 
 	public static void AddDoctor(DBproject esql) {//1
 		String lastID = getValidDoctorID(esql);
@@ -482,8 +503,6 @@ public class DBproject{
 		if(Integer.parseInt(month) > 12 || Integer.parseInt(month) < 1){
 			return false;
 		}
-
-
 			
 		for(int i = 8; i <= 9; i++){
 			day = day + input.charAt(i);
@@ -613,6 +632,7 @@ public class DBproject{
 		}
 		return false;
 	}
+  
 	public static boolean validDoctor(DBproject esql, String input){
 		List<List<String>> resultset = new ArrayList<List<String>>();
 		try{
@@ -650,7 +670,7 @@ public class DBproject{
 			
 		return false;
 	}
-
+  
 	 public static boolean validAvailableAppointment(DBproject esql, String inputID){
                 List<List<String>> resultset = new ArrayList<List<String>>();
                 try{
@@ -768,23 +788,149 @@ public class DBproject{
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
 		// For a doctor ID and a date range, find the list of active and available appointments of the doctor
+		
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter Doctor ID: ");
+		String docid = in.nextLine();
+
+		while (!validDoctor(esql, docid)) {
+			System.out.println("Invalid input, please re-enter Doctor ID: ");
+                        docid = in.nextLine();			
+		}	
+
+		System.out.println("Enter a date range in the format YYYY-MM-DD:\n Date 1: ");
+                String first = in.nextLine();
+
+		while(!getValidDate(first)) {
+                        System.out.print("Invalid date! Please follow format (YYYY-MM-DD)! Date 1: ");
+                        first = in.nextLine();
+                }
+			
+		System.out.println("Date 2: ");				
+		String second = in.nextLine();
+
+                while(!getValidDate(first)) {
+                        System.out.print("Invalid date! Please follow format (YYYY-MM-DD)! Date 2: ");
+                        second = in.nextLine();
+                }
+	
+		System.out.println("List of active and available appointments for Doctor ID " + docid + ": ");
+
+		try {
+			String query = "SELECT appnt_ID FROM appointment LEFT JOIN has_appointment ON appointment.appnt_ID = has_appointment.appt_id WHERE (appointment.adate >= '" + first + "' AND appointment.adate <= '" + second + "') AND (appointment.status = 'AC' OR appointment.status = 'AV') AND (has_appointment.doctor_id = " + docid + ")";
+			int rc = esql.executeQueryAndPrintResult(query);
+			System.out.println("Row count: " + rc);
+		} catch(Exception e) {
+			System.err.println(e.getMessage());
+		}
+	}
+	
+	public static boolean validDepartmentName(DBproject esql, String inputName){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select name from department";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+
+		for(List<String> name : resultset){
+			for(int i = 0; i < name.size(); i++){
+				if((inputName).equals(name.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
 		// For a department name and a specific date, find the list of available appointments of the departmentkjhjkjkljk
+=======
+		Scanner input = new Scanner (System.in);
+		System.out.println("Enter department name: ");
+		String departmentName = input.nextLine();
+
+		while(!(validDepartmentName(esql, departmentName))){
+			System.out.print("Please enter a valid department name: ");
+			departmentName = input.nextLine();
+
+		}
+		
+		System.out.print("Enter date: ");
+		String inputDate = input.nextLine();
+
+		while(!(getValidDate(inputDate))){
+			System.out.print("Please enter a valid date (follow format YYYY-MM-DD): ");
+			inputDate = input.nextLine();
+		}
+
+		System.out.println("List of available appointments for department " + departmentName);
+		try{
+			String query = "select appnt_id, time_slot " + 
+					"from appointment join has_appointment on appointment.appnt_ID = has_appointment.appt_id " + 
+					"join doctor " + 
+					"on has_appointment.doctor_id = doctor.doctor_id " + 
+					"join department " +
+					"on doctor.did = dept_ID " + 
+					"where appointment.status = 'AV' and appointment.adate = '" + inputDate + "' and department.name = '" + departmentName + "'";
+			esql.executeQuery(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+			 
 	}
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) {//7
 		// Count number of different types of appointments per doctors and list them in descending order
-	}
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		String query = "select doctor.name, count(appointment.appnt_ID) as num_appnt, appointment.status from doctor join has_appointment on doctor.doctor_ID = has_appointment.doctor_id left join appointment on has_appointment.appt_id = appointment.appnt_ID group by doctor.doctor_id, appointment.status order by doctor.doctor_id ASC, num_appnt DESC";
 
+		try {
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+		String output = "";
+		String prevname = "";
+
+		for (List<String> record : resultset) {
+			if (prevname.equals(record.get(0))) {
+				output += ", " + record.get(1) + record.get(2);
+			} else {
+				if (output.length() > 0) {
+					System.out.println(output);
+				}
+				output = record.get(0) + ": " + record.get(1) + record.get(2);
+				prevname = record.get(0);
+			}
+		}
+	}
 	
 	public static void FindPatientsCountWithStatus(DBproject esql) {//8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC, AV, WL) and list that number per doctor.
+		Scanner in = new Scanner(System.in);	
+
+		System.out.println("Please insert a valid appointment status (PA/AC/AV/WL): ");
+		String stat = in.nextLine();
+
+		while (!getValidAppointmentStatus(stat)) {
+			System.out.println("Invalid appointment status! Please retry (PA/AC/AV/WL): ");
+			stat = in.nextLine();
+		}
+		
+		String query = "select doctor.name, count(distinct searches.pid) as number_of_patients from doctor join has_appointment on doctor.doctor_id = has_appointment.doctor_id join appointment on has_appointment.appt_id = appointment.appnt_id join searches on appointment.appnt_id = searches.aid where appointment.status = '" + stat  + "' group by doctor.name, doctor.doctor_id order by doctor.doctor_id";	
+		try {
+			esql.executeQueryAndPrintResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
 	}
+
 	public static boolean isCharInput(String input){
 		input = input.toLowerCase();
-		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
 		int count = 0;
 		for(int i = 0; i < input.length(); i++){
 			char x = input.charAt(i);
