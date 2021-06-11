@@ -692,7 +692,24 @@ public class DBproject{
 	
 	public static void FindPatientsCountWithStatus(DBproject esql) {//8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC, AV, WL) and list that number per doctor.
+		Scanner in = new Scanner(System.in);	
+
+		System.out.println("Please insert a valid appointment status (PA/AC/AV/WL): ");
+		String stat = in.nextLine();
+
+		while (!getValidAppointmentStatus(stat)) {
+			System.out.println("Invalid appointment status! Please retry (PA/AC/AV/WL): ");
+			stat = in.nextLine();
+		}
+		
+		String query = "select doctor.name, count(distinct searches.pid) as number_of_patients from doctor join has_appointment on doctor.doctor_id = has_appointment.doctor_id join appointment on has_appointment.appt_id = appointment.appnt_id join searches on appointment.appnt_id = searches.aid where appointment.status = '" + stat  + "' group by doctor.name, doctor.doctor_id order by doctor.doctor_id";	
+		try {
+			esql.executeQueryAndPrintResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
 	}
+
 	public static boolean isCharInput(String input){
 		input = input.toLowerCase();
 		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
