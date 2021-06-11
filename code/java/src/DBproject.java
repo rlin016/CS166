@@ -555,6 +555,57 @@ public class DBproject{
 		return false;
 	}
 	
+	public static boolean validDoctorName(DBproject esql, String dname) {
+		String query = "select * from Doctor where name = '" + dname + "'";
+		int rc = 0;		
+
+		try {
+			rc = esql.executeQuery(query);	
+		} catch(Exception e){
+                        System.err.println(e.getMessage());
+                }	
+
+		if (rc > 0) {
+			return false;
+		} else {
+			return true;
+		}
+	} 
+
+	public static boolean validDoctorEntry(DBproject esql, String dname, String specialty, String did) {
+		String query = "select * from Doctor where name = '" + dname + "' and specialty = '" + specialty + "' and did = " + did;
+		int rc = 0;
+
+		try {
+                        rc = esql.executeQuery(query);
+                } catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+                if (rc > 0) {
+                        return false;
+                } else {
+                        return true;
+                }
+	}
+
+	public static boolean validPatientEntry(DBproject esql, String pname, char gender, int age, String address) {
+		String query = "select * from Patient where name = '" + pname + "' and gtype = '" + gender + "' and age = " + age + " and address = '" + address + "'";
+		int rc = 0;
+
+                try {
+                        rc = esql.executeQuery(query);
+                } catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+                if (rc > 0) {
+                        return false;
+                } else {
+                        return true;
+                }
+	}
+
 	public static void AddDoctor(DBproject esql) {//1
 		String lastID = getValidDoctorID(esql);
 		int newID = Integer.parseInt(lastID) + 1;
@@ -584,17 +635,23 @@ public class DBproject{
 			did = in.nextLine();
 		}
 
-		try {
-			String query = "INSERT INTO Doctor(doctor_ID, name, specialty, did) " + 
-					"VALUES ('" + newID + "', '" + dname + "', '" + dspecialty + "', '" + did + "')"; 
-			esql.executeUpdate(query);
+		if (!validDoctorEntry(esql, dname, dspecialty, did)) {
+			System.out.println("Duplicate entry, invalid input. Please retry.");
+		} else {
 
-			String query2 = "select * from Doctor where doctor_ID = " + newID;
-			int rowcount = esql.executeQueryAndPrintResult(query2);
-			System.out.println(rowcount);
-		} catch(Exception e) {
-                        System.err.println(e.getMessage());
-                } 				
+			try {
+				String query = "INSERT INTO Doctor(doctor_ID, name, specialty, did) " + 
+					"VALUES ('" + newID + "', '" + dname + "', '" + dspecialty + "', '" + did + "')"; 
+				esql.executeUpdate(query);
+			
+				System.out.println("New record inserted into Doctors: ");
+				String query2 = "select * from Doctor group by doctor_id order by doctor_id DESC limit 1";
+				int rowcount = esql.executeQueryAndPrintResult(query2);
+				System.out.println("Rowcount: " + rowcount);
+			} catch(Exception e) {
+                       		System.err.println(e.getMessage());
+                	} 
+		}	 				
 	}
 
 	public static void AddPatient(DBproject esql) {//2
@@ -604,7 +661,7 @@ public class DBproject{
 		
 		while(!validString(patientName)) {
 			System.out.println("Invalid input, please re-enter Patient name: ");
-			patientName = in.nextLine();
+			patientName = input.nextLine();
 		}
 
 		char patientGender = 'X';
@@ -630,23 +687,31 @@ public class DBproject{
 			try{
 				patientAge = Integer.parseInt(input.nextLine());
 			} catch(Exception e){
-				System.err.println("Invalid age! Please choose a number!");
+				System.err.println("Invalid age! Please choose a valid number!");
 			}
-		} while(patientAge == -1);
+		} while(patientAge < 0 || patientAge > 110);
 
 		System.out.print("Enter address: ");
 		String patientAddress = input.nextLine();
 
-		try{	
-			System.out.println("Updating now...");
-			String query = "insert into patient values ((select count(*) as yes from patient)+1, '" 
+		if (!validPatientEntry(esql, patientName, patientGender, patientAge, patientAddress)) {
+			System.out.println("Duplicate entry, invalid input. Please retry.");
+		} else {
+
+			try{	
+				String query = "insert into patient values ((select count(*) as yes from patient)+1, '" 
 					+ patientName + "', '" + String.valueOf(patientGender) + "', " 
 					+ Integer.toString(patientAge) + ", '" + patientAddress + "', 0)";
-			esql.executeUpdate(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-		}
-					
+				esql.executeUpdate(query);
+
+				System.out.println("New record inserted into Patients: ");
+				String query2 = "select * from patient group by patient_ID order by patient_ID DESC limit 1";
+				int rowcount = esql.executeQueryAndPrintResult(query2);
+				System.out.println("Rowcount: " + rowcount);
+			} catch(Exception e){
+				System.err.println(e.getMessage());
+			}
+		}			
 	}
 				
 	public static void AddAppointment(DBproject esql) {//3
