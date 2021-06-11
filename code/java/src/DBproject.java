@@ -595,13 +595,59 @@ public class DBproject{
 		}
 	}	
 		
-	public static boolean validPatient(String input){
-		return true;
+	public static boolean validPatient(DBproject esql, String inputName){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select name from patient";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+		for(List<String> name : resultset){
+			for(int i = 0; i < name.size(); i++){
+				if((inputName).equals(name.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
-	public static boolean validDoctor(String input){
-		return true;
+	public static boolean validDoctor(DBproject esql, String input){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select doctor_ID from doctor";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch (Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+		for (List<String> doctorID : resultset){
+			for(int i = 0; i < doctorID.size(); i++){
+				if((input).equals(doctorID.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
-	public static boolean validAppointment(String input){
+	public static boolean validAppointment(DBproject esql, String inputID){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select appnt_id from appointment";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+		for(List<String> appnt_id : resultset){
+			for(int i = 0; i < appnt_id.size(); i++){
+				if((inputID).equals(appnt_id.get(i))){
+					return false;
+				}
+			}
+		}
+			
 		return true;
 	}
 
@@ -611,21 +657,21 @@ public class DBproject{
 		
 		System.out.print("Please enter patient name: ");
 		String patientName = input.nextLine();
-		if(!(validPatient(patientName))){
-			System.out.print("Patient not found! Please follow on-screen instructions: ");
+		if(!(validPatient(esql, patientName))){
+			System.out.println("Patient not found! Please follow on-screen instructions: ");
 			AddPatient(esql);		
 		}
 
 		System.out.print("Please enter doctor ID: ");
 		String doctorID = input.nextLine();
-		if(!(validDoctor(doctorID))){
+		if(!(validDoctor(esql, doctorID))){
 			System.out.print("Doctor ID not valid! Query failed");
 			return;
 		}
 
 		System.out.print("Please enter desired appointment ID: "); //does this use the appointment ID??
 		String appointmentID = input.nextLine();
-		if(!(validAppointment(appointmentID))){
+		if(!(validAppointment(esql, appointmentID))){
 			System.out.print("Appointment ID not valid! Query failed.");
 			return;	
 		}
@@ -636,6 +682,8 @@ public class DBproject{
 				"where (select appnt_id from appointment " +
 				"inner join has_appointment on " +
 				"appointment.appnt_id = has_appointment.appt_id and doctor_id = " + doctorID + ") = " + appointmentID;
+		
+
 		try{
 			esql.executeUpdate(query);
 		}
@@ -650,7 +698,7 @@ public class DBproject{
 	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
-		// For a department name and a specific date, find the list of available appointments of the department
+		// For a department name and a specific date, find the list of available appointments of the departmentkjhjkjkljk
 	}
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) {//7
