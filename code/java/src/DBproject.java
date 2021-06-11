@@ -299,7 +299,33 @@ public class DBproject{
 		}while (true);
 		return input;
 	}//end readChoice
+	
+	//GETTING FUNCTIONS
+	public static String getValidDoctorID(DBproject esql) { // should change to newDoctorID
+		List<List<String>> resultset = new ArrayList<List<String>>();
 
+		try {
+			String query = "SELECT MAX(doctor_ID) FROM Doctor";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+		return resultset.get(0).get(0);
+	}
+	
+	public static String getValidAppointmentID(DBproject esql){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select MAX(appnt_ID) from appointment";
+			resultset = esql.executeQueryAndReturnResult(query);
+		}catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		return resultset.get(0).get(0) + 1;		
+	}
+	
+	//VALID FUNCTIONS
 	public static boolean validString(String str) {
 		if (str.length() == 0) {
 			return false;
@@ -337,19 +363,6 @@ public class DBproject{
 		return false;
 	}
 
-	public static String getValidDoctorID(DBproject esql) { // should change to newDoctorID
-		List<List<String>> resultset = new ArrayList<List<String>>();
-
-		try {
-			String query = "SELECT MAX(doctor_ID) FROM Doctor";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch(Exception e) {
-                        System.err.println(e.getMessage());
-                }
-
-		return resultset.get(0).get(0);
-	}
-
 	public static boolean validDoctor(DBproject esql, String id) {
                 List<List<String>> resultset = new ArrayList<List<String>>();
                 try {
@@ -369,106 +382,7 @@ public class DBproject{
 
                 return false;
         }
-
-
-	public static void AddDoctor(DBproject esql) {//1
-		String lastID = getValidDoctorID(esql);
-		int newID = Integer.parseInt(lastID) + 1;
-
-		Scanner in = new Scanner(System.in);
-		System.out.println("Enter Doctor name: ");
-		String dname = in.nextLine();
-		
-		while (!validString(dname)) {
-			System.out.println("Invalid input, please re-enter Doctor name: ");
-			dname = in.nextLine();
-		}
-
-		System.out.println("Enter Doctor specialty: ");
-		String dspecialty = in.nextLine();
-		
-		while (!validString(dspecialty)) {
-			System.out.println("Invalid input, please re-enter Doctor specialty: ");
-			dspecialty = in.nextLine();
-		}
-
-		System.out.println("Enter department id: ");
-		String did = in.nextLine();
-		
-		while (!validDepartment(esql, did)) {
-			System.out.println("Invalid input, please re-enter Department id: ");
-			did = in.nextLine();
-		}
-
-		try {
-			String query = "INSERT INTO Doctor(doctor_ID, name, specialty, did) " + 
-					"VALUES ('" + newID + "', '" + dname + "', '" + dspecialty + "', '" + did + "')"; 
-			esql.executeUpdate(query);
-
-			String query2 = "select * from Doctor where doctor_ID = " + newID;
-			int rowcount = esql.executeQueryAndPrintResult(query2);
-			System.out.println(rowcount);
-		} catch(Exception e) {
-                        System.err.println(e.getMessage());
-                } 				
-	}
-
-	public static void AddPatient(DBproject esql) {//2
-		Scanner input = new Scanner(System.in);
-		String patientName;
-		do{
-			System.out.print("Enter name: ");
-			patientName = input.nextLine();
-		
 	
-			if(!isCharInput(patientName)){
-				System.out.println("Invalid name! No numbers or symbols!");
-			}
-		}while(!isCharInput(patientName));
-		
-
-		char patientGender = 'X';
-		do{
-			System.out.print("Enter gender (F/M): ");
-			patientGender = input.next().charAt(0);
-			input.nextLine();
-			if(patientGender == 'f' || patientGender == 'F'){
-				patientGender = 'F';
-			}
-			else if(patientGender == 'm' || patientGender == 'M'){
-				patientGender = 'M';
-			}
-			else{
-				patientGender = 'X';
-				System.out.println("Invalid gender! Please choose f or m!");
-			}
-		} while(patientGender == 'X');
-	
-		int patientAge = -1;
-		do{
-			System.out.print("Enter age: ");
-			try{
-				patientAge = Integer.parseInt(input.nextLine());
-			} catch(Exception e){
-				System.err.println("Invalid age! Please choose a number!");
-			}
-		} while(patientAge == -1);
-
-		System.out.print("Enter address: ");
-		String patientAddress = input.nextLine();
-
-		try{	
-			System.out.println("Updating now...");
-			String query = "insert into patient values ((select count(*) as yes from patient)+1, '" 
-					+ patientName + "', '" + String.valueOf(patientGender) + "', " 
-					+ Integer.toString(patientAge) + ", '" + patientAddress + "', 0)";
-			esql.executeUpdate(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-		}
-					
-	}
-
 	public static boolean getValidDate(String input){
 		if(input.length() != 10){
 			return false;
@@ -546,7 +460,7 @@ public class DBproject{
 	}
 			
 	
-	public static boolean getValidTimeslot(String input){
+	public static boolean getValidTimeslot(String input){ //this is incomplete
 		return true;
 	}
 	
@@ -562,19 +476,179 @@ public class DBproject{
 			return false;
 		}
 	}
-	
-	public static String getValidAppointmentID(DBproject esql){
+
+	public static boolean validPatient(DBproject esql, String inputName){
 		List<List<String>> resultset = new ArrayList<List<String>>();
 		try{
-			String query = "select MAX(appnt_ID) from appointment";
+			String query = "select name from patient";
 			resultset = esql.executeQueryAndReturnResult(query);
-		}catch(Exception e){
+		} catch(Exception e){
 			System.err.println(e.getMessage());
 		}
-		return resultset.get(0).get(0) + 1;		
+		
+		for(List<String> name : resultset){
+			for(int i = 0; i < name.size(); i++){
+				if((inputName).equals(name.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean validAppointment(DBproject esql, String inputID){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select appnt_id from appointment";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		
+		for(List<String> appnt_id : resultset){
+			for(int i = 0; i < appnt_id.size(); i++){
+				if((inputID).equals(appnt_id.get(i))){
+					return true;
+				}
+			}
+		}
+			
+		return false;
+	}
+  
+	public static boolean validAvailableAppointment(DBproject esql, String inputID){
+                List<List<String>> resultset = new ArrayList<List<String>>();
+                try{
+                        String query = "select appnt_id from appointment";
+                        resultset = esql.executeQueryAndReturnResult(query);
+                } catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+                for(List<String> appnt_id : resultset){
+                        for(int i = 0; i < appnt_id.size(); i++){
+                                if((inputID).equals(appnt_id.get(i))){
+                                        return false;
+                                }
+                        }
+                }
+
+                return true;
+        }
+
+	public static boolean validDepartmentName(DBproject esql, String inputName){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select name from department";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+
+		for(List<String> name : resultset){
+			for(int i = 0; i < name.size(); i++){
+				if((inputName).equals(name.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static void AddDoctor(DBproject esql) {//1
+		String lastID = getValidDoctorID(esql);
+		int newID = Integer.parseInt(lastID) + 1;
+
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter Doctor name: ");
+		String dname = in.nextLine();
+		
+		while (!validString(dname)) {
+			System.out.println("Invalid input, please re-enter Doctor name: ");
+			dname = in.nextLine();
+		}
+
+		System.out.println("Enter Doctor specialty: ");
+		String dspecialty = in.nextLine();
+		
+		while (!validString(dspecialty)) {
+			System.out.println("Invalid input, please re-enter Doctor specialty: ");
+			dspecialty = in.nextLine();
+		}
+
+		System.out.println("Enter department id: ");
+		String did = in.nextLine();
+		
+		while (!validDepartment(esql, did)) {
+			System.out.println("Invalid input, please re-enter Department id: ");
+			did = in.nextLine();
+		}
+
+		try {
+			String query = "INSERT INTO Doctor(doctor_ID, name, specialty, did) " + 
+					"VALUES ('" + newID + "', '" + dname + "', '" + dspecialty + "', '" + did + "')"; 
+			esql.executeUpdate(query);
+
+			String query2 = "select * from Doctor where doctor_ID = " + newID;
+			int rowcount = esql.executeQueryAndPrintResult(query2);
+			System.out.println(rowcount);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                } 				
+	}
+
+	public static void AddPatient(DBproject esql) {//2
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter name: ");
+		String patientName = input.nextLine();
+		
+		while(!validString(patientName)) {
+			System.out.println("Invalid input, please re-enter Patient name: ");
+			patientName = in.nextLine();
+		}
+
+		char patientGender = 'X';
+		do{
+			System.out.print("Enter gender (F/M): ");
+			patientGender = input.next().charAt(0);
+			input.nextLine();
+			if(patientGender == 'f' || patientGender == 'F'){
+				patientGender = 'F';
+			}
+			else if(patientGender == 'm' || patientGender == 'M'){
+				patientGender = 'M';
+			}
+			else{
+				patientGender = 'X';
+				System.out.println("Invalid gender! Please choose f or m!");
+			}
+		} while(patientGender == 'X');
+	
+		int patientAge = -1;
+		do{
+			System.out.print("Enter age: ");
+			try{
+				patientAge = Integer.parseInt(input.nextLine());
+			} catch(Exception e){
+				System.err.println("Invalid age! Please choose a number!");
+			}
+		} while(patientAge == -1);
+
+		System.out.print("Enter address: ");
+		String patientAddress = input.nextLine();
+
+		try{	
+			System.out.println("Updating now...");
+			String query = "insert into patient values ((select count(*) as yes from patient)+1, '" 
+					+ patientName + "', '" + String.valueOf(patientGender) + "', " 
+					+ Integer.toString(patientAge) + ", '" + patientAddress + "', 0)";
+			esql.executeUpdate(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+					
 	}
 				
-
 	public static void AddAppointment(DBproject esql) {//3
 		Scanner input = new Scanner(System.in);
 		
@@ -613,83 +687,7 @@ public class DBproject{
 			System.err.println(e.getMessage());
 		}
 	}	
-		
-	public static boolean validPatient(DBproject esql, String inputName){
-		List<List<String>> resultset = new ArrayList<List<String>>();
-		try{
-			String query = "select name from patient";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-		}
-		
-		for(List<String> name : resultset){
-			for(int i = 0; i < name.size(); i++){
-				if((inputName).equals(name.get(i))){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-  
-	public static boolean validDoctor(DBproject esql, String input){
-		List<List<String>> resultset = new ArrayList<List<String>>();
-		try{
-			String query = "select doctor_ID from doctor";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch (Exception e){
-			System.err.println(e.getMessage());
-		}
-		
-		for (List<String> doctorID : resultset){
-			for(int i = 0; i < doctorID.size(); i++){
-				if((input).equals(doctorID.get(i))){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	public static boolean validAppointment(DBproject esql, String inputID){
-		List<List<String>> resultset = new ArrayList<List<String>>();
-		try{
-			String query = "select appnt_id from appointment";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-		}
-		
-		for(List<String> appnt_id : resultset){
-			for(int i = 0; i < appnt_id.size(); i++){
-				if((inputID).equals(appnt_id.get(i))){
-					return true;
-				}
-			}
-		}
-			
-		return false;
-	}
-  
-	 public static boolean validAvailableAppointment(DBproject esql, String inputID){
-                List<List<String>> resultset = new ArrayList<List<String>>();
-                try{
-                        String query = "select appnt_id from appointment";
-                        resultset = esql.executeQueryAndReturnResult(query);
-                } catch(Exception e){
-                        System.err.println(e.getMessage());
-                }
-
-                for(List<String> appnt_id : resultset){
-                        for(int i = 0; i < appnt_id.size(); i++){
-                                if((inputID).equals(appnt_id.get(i))){
-                                        return false;
-                                }
-                        }
-                }
-
-                return true;
-        }
+	
 	public static boolean updateStatus(DBproject esql, String inputAppointmentID, String inputDoctorID){
 		String query;
 		List<List<String>> resultset = new ArrayList<List<String>>();
@@ -768,7 +766,7 @@ public class DBproject{
 			return;
 		}
 
-		System.out.print("Please enter desired appointment ID: "); //does this use the appointment ID??
+		System.out.print("Please enter desired appointment ID: "); 
 		String appointmentID = input.nextLine();
 		if(!(validAppointment(esql, appointmentID))){
 			System.out.println("Appointment ID not valid! Query failed.");
@@ -824,29 +822,9 @@ public class DBproject{
 			System.err.println(e.getMessage());
 		}
 	}
-	
-	public static boolean validDepartmentName(DBproject esql, String inputName){
-		List<List<String>> resultset = new ArrayList<List<String>>();
-		try{
-			String query = "select name from department";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
-		}
-
-		for(List<String> name : resultset){
-			for(int i = 0; i < name.size(); i++){
-				if((inputName).equals(name.get(i))){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
-		// For a department name and a specific date, find the list of available appointments of the departmentkjhjkjkljk
-=======
+		// For a department name and a specific date, find the list of available appointments of the department
 		Scanner input = new Scanner (System.in);
 		System.out.println("Enter department name: ");
 		String departmentName = input.nextLine();
@@ -926,25 +904,5 @@ public class DBproject{
 		} catch(Exception e) {
                         System.err.println(e.getMessage());
                 }
-	}
-
-	public static boolean isCharInput(String input){
-		input = input.toLowerCase();
-		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
-		int count = 0;
-		for(int i = 0; i < input.length(); i++){
-			char x = input.charAt(i);
-			for(int j = 0; j < search.length; j++){
-				if(x == search[j]){
-					count++;
-				}
-			}
-		}
-		if(count == input.length()){
-			return true;
-		}
-		else{
-			return false;
-		}
 	}
 }
