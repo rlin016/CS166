@@ -658,8 +658,59 @@ public class DBproject{
 			System.err.println(e.getMessage());
 		}
 	}
+	
+	public static boolean validDepartmentName(DBproject esql, String inputName){
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			String query = "select name from department";
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+
+		for(List<String> name : resultset){
+			for(int i = 0; i < name.size(); i++){
+				if((inputName).equals(name.get(i))){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
+		Scanner input = new Scanner (System.in);
+		System.out.println("Enter department name: ");
+		String departmentName = input.nextLine();
+
+		while(!(validDepartmentName(esql, departmentName))){
+			System.out.print("Please enter a valid department name: ");
+			departmentName = input.nextLine();
+
+		}
+		
+		System.out.print("Enter date: ");
+		String inputDate = input.nextLine();
+
+		while(!(getValidDate(inputDate))){
+			System.out.print("Please enter a valid date (follow format YYYY-MM-DD): ");
+			inputDate = input.nextLine();
+		}
+
+		System.out.println("List of available appointments for department " + departmentName);
+		try{
+			String query = "select appnt_id, time_slot " + 
+					"from appointment join has_appointment on appointment.appnt_ID = has_appointment.appt_id " + 
+					"join doctor " + 
+					"on has_appointment.doctor_id = doctor.doctor_id " + 
+					"join department " +
+					"on doctor.did = dept_ID " + 
+					"where appointment.status = 'AV' and appointment.adate = '" + inputDate + "' and department.name = '" + departmentName + "'";
+			esql.executeQuery(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+			 
 		// For a department name and a specific date, find the list of available appointments of the department
 	}
 
