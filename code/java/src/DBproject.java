@@ -316,13 +316,15 @@ public class DBproject{
 	
 	public static String getValidAppointmentID(DBproject esql){
 		List<List<String>> resultset = new ArrayList<List<String>>();
+		
 		try{
 			String query = "select MAX(appnt_ID) from appointment";
 			resultset = esql.executeQueryAndReturnResult(query);
 		}catch(Exception e){
 			System.err.println(e.getMessage());
 		}
-		return resultset.get(0).get(0) + 1;		
+
+		return resultset.get(0).get(0);		
 	}
 	
 	//VALID FUNCTIONS
@@ -606,6 +608,23 @@ public class DBproject{
                 }
 	}
 
+	public static boolean validAppEntry(DBproject esql, String date, String timeslot, String status) {
+		String query = "select * from Appointment where adate = '" + date + "' and time_slot = '" + timeslot + "' and status = '" + status + "'";
+		int rc = 0;
+
+		try {
+                        rc = esql.executeQuery(query);
+                } catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+                if (rc > 0) {
+                        return false;
+                } else {
+                        return true;
+                }
+	}
+
 	public static void AddDoctor(DBproject esql) {//1
 		String lastID = getValidDoctorID(esql);
 		int newID = Integer.parseInt(lastID) + 1;
@@ -716,7 +735,10 @@ public class DBproject{
 				
 	public static void AddAppointment(DBproject esql) {//3
 		Scanner input = new Scanner(System.in);
-		
+	
+		int newid = Integer.parseInt(getValidAppointmentID(esql));
+		newid += 1;	
+	
 		System.out.print("Enter date of appointment in format (YYYY-MM-DD): ");
 		String appointmentDate = input.nextLine();
 		
@@ -740,16 +762,23 @@ public class DBproject{
 			System.out.print("Invalid appointment status! Please follow format (PA / AC / AV / WL): ");
 			appointmentStatus = (input.nextLine()).toUpperCase();
 		} 
-		
 	
-		System.out.println("Updating appointment...");
-		try{
-			String query = "insert into appointment " +
-				       "values (" + getValidAppointmentID(esql) + ", '" + appointmentDate + "', '" +
+		if (!validAppEntry(esql, appointmentDate, timeSlotInput, appointmentStatus)) {
+			System.out.println("Duplicate entry, invalid input. Please retry.");
+		} else {
+			try{
+				String query = "insert into appointment " +
+				       "values (" + newid + ", '" + appointmentDate + "', '" +
 				       timeSlotInput + "', '" + appointmentStatus + "')";
-			esql.executeUpdate(query);
-		} catch(Exception e){
-			System.err.println(e.getMessage());
+				esql.executeUpdate(query);
+
+				System.out.println("New record inserted into Appointments: ");
+				String query2 = "select * from appointment group by appnt_ID order by appnt_ID DESC limit 1";
+				int rowcount = esql.executeQueryAndPrintResult(query2);
+				System.out.println("Rowcount: " + rowcount);
+			} catch(Exception e){
+				System.err.println(e.getMessage());
+			}
 		}
 	}	
 	
