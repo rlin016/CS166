@@ -665,8 +665,30 @@ public class DBproject{
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) {//7
 		// Count number of different types of appointments per doctors and list them in descending order
-	}
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		String query = "select doctor.name, count(appointment.appnt_ID) as num_appnt, appointment.status from doctor join has_appointment on doctor.doctor_ID = has_appointment.doctor_id left join appointment on has_appointment.appt_id = appointment.appnt_ID group by doctor.doctor_id, appointment.status order by doctor.doctor_id ASC, num_appnt DESC";
 
+		try {
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+		String output = "";
+		String prevname = "";
+
+		for (List<String> record : resultset) {
+			if (prevname.equals(record.get(0))) {
+				output += ", " + record.get(1) + record.get(2);
+			} else {
+				if (output.length() > 0) {
+					System.out.println(output);
+				}
+				output = record.get(0) + ": " + record.get(1) + record.get(2);
+				prevname = record.get(0);
+			}
+		}
+	}
 	
 	public static void FindPatientsCountWithStatus(DBproject esql) {//8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC, AV, WL) and list that number per doctor.
