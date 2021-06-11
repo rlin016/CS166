@@ -643,20 +643,40 @@ public class DBproject{
 		for(List<String> appnt_id : resultset){
 			for(int i = 0; i < appnt_id.size(); i++){
 				if((inputID).equals(appnt_id.get(i))){
-					return false;
+					return true;
 				}
 			}
 		}
 			
-		return true;
+		return false;
 	}
+
+	 public static boolean validAvailableAppointment(DBproject esql, String inputID){
+                List<List<String>> resultset = new ArrayList<List<String>>();
+                try{
+                        String query = "select appnt_id from appointment";
+                        resultset = esql.executeQueryAndReturnResult(query);
+                } catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+                for(List<String> appnt_id : resultset){
+                        for(int i = 0; i < appnt_id.size(); i++){
+                                if((inputID).equals(appnt_id.get(i))){
+                                        return false;
+                                }
+                        }
+                }
+
+                return true;
+        }
 	public static boolean updateStatus(DBproject esql, String inputAppointmentID, String inputDoctorID){
 		String query;
 		List<List<String>> resultset = new ArrayList<List<String>>();
 		try{
 			query = "select status from appointment " +
 				"join has_appointment on has_appointment.doctor_id = " + inputDoctorID +
-				"where appointment.appt_id = " + inputAppointmentID;
+				"where appointment.appnt_id = " + inputAppointmentID;
 			resultset = esql.executeQueryAndReturnResult(query);
 		} catch(Exception e){
 			System.err.println(e.getMessage());
@@ -667,8 +687,8 @@ public class DBproject{
 		else if(resultset.get(0).get(0) == "AC"){
 			try{
 				query = "update appointment set status = 'WL' " +
-					"join has_appointment on has_appointment.appnt_id = appointment.appt_id " +
-					"where appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
+					"join has_appointment on has_appointment.appt_id = appointment.appnt_id " +
+					"where appointment.appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
 					inputDoctorID;
 				try{
 					esql.executeUpdate(query);
@@ -686,8 +706,8 @@ public class DBproject{
 		else if(resultset.get(0).get(0) == "AV"){
                         try{
                                 query = "update appointment set status = 'AC' " +
-                                        "join has_appointment on has_appointment.appnt_id = appointment.appt_id " +
-                                        "where appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
+                                        "join has_appointment on has_appointment.appt_id = appointment.appnt_id " +
+                                        "where appointment.appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
                                         inputDoctorID;
 	                                esql.executeUpdate(query);
         	                        return true;
