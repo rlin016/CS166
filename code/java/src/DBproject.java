@@ -650,46 +650,99 @@ public class DBproject{
 			
 		return true;
 	}
+	public static boolean updateStatus(DBproject esql, String inputAppointmentID, String inputDoctorID){
+		String query;
+		List<List<String>> resultset = new ArrayList<List<String>>();
+		try{
+			query = "select status from appointment " +
+				"join has_appointment on has_appointment.doctor_id = " + inputDoctorID +
+				"where appointment.appt_id = " + inputAppointmentID;
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
+		}
+		if(resultset.get(0).get(0) == "PA"){	
+			return false; //didn't have to update anything
+		}
+		else if(resultset.get(0).get(0) == "AC"){
+			try{
+				query = "update appointment set status = 'WL' " +
+					"join has_appointment on has_appointment.appnt_id = appointment.appt_id " +
+					"where appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
+					inputDoctorID;
+				try{
+					esql.executeUpdate(query);
+				} catch(Exception e){
+					System.err.println(e.getMessage());
+				}
+					return true;
+			
+					
+			} catch(Exception e){
+				System.err.println(e.getMessage());
+			}
+		}
+
+		else if(resultset.get(0).get(0) == "AV"){
+                        try{
+                                query = "update appointment set status = 'AC' " +
+                                        "join has_appointment on has_appointment.appnt_id = appointment.appt_id " +
+                                        "where appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
+                                        inputDoctorID;
+	                                esql.executeUpdate(query);
+        	                        return true;
+
+                        } catch(Exception e){
+                                System.err.println(e.getMessage());
+                        }
+		}
+		else if(resultset.get(0).get(0) == "WL"){
+                       return true;
+		} //returns true if the has_apponitments table needs to be updated		
+		return false;
+	}
 
 	public static void MakeAppointment(DBproject esql) {//4
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to take, add an appointment to the DB
-		Scanner input = new Scanner(System.in);
-		
+		Scanner input = new Scanner(System.in);	
 		System.out.print("Please enter patient name: ");
 		String patientName = input.nextLine();
+		String patientID;
 		if(!(validPatient(esql, patientName))){
 			System.out.println("Patient not found! Please follow on-screen instructions: ");
-			AddPatient(esql);		
+			AddPatient(esql);
+			try{
+				String patientIDQuery = "select count(*) from patient";
+				List<List<String>> resultset = new ArrayList<List<String>>();
+				resultset = esql.executeQueryAndReturnResult(patientIDQuery);		
+				patientID = resultset.get(0).get(0);
+			}catch(Exception e){
+				System.err.println(e.getMessage());
+			}
 		}
 
 		System.out.print("Please enter doctor ID: ");
 		String doctorID = input.nextLine();
 		if(!(validDoctor(esql, doctorID))){
-			System.out.print("Doctor ID not valid! Query failed");
+			System.out.println("Doctor ID not valid! Query failed");
 			return;
 		}
 
 		System.out.print("Please enter desired appointment ID: "); //does this use the appointment ID??
 		String appointmentID = input.nextLine();
 		if(!(validAppointment(esql, appointmentID))){
-			System.out.print("Appointment ID not valid! Query failed.");
+			System.out.println("Appointment ID not valid! Query failed.");
 			return;	
 		}
 		
 		//System.out.println("Hello!");
-
-		String query = "update appointment set status = 'AC' " +
-				"where (select appnt_id from appointment " +
-				"inner join has_appointment on " +
-				"appointment.appnt_id = has_appointment.appt_id and doctor_id = " + doctorID + ") = " + appointmentID;
-		
-
-		try{
-			esql.executeUpdate(query);
-		}
-		catch(Exception e){
-		//	System.out.println("Problem here!");
-			System.err.println(e.getMessage());
+		if(updateStatus(esql, appointmentID, doctorID)){
+			try{
+				String query = "insert into has_appointment values (" +
+						appointmentID + ", " + doctorID + ")";
+			} catch(Exception e){
+				System.err.println(e.getMessage());
+			}
 		}
 	}
 
