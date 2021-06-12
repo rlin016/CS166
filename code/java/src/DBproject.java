@@ -952,7 +952,7 @@ public class DBproject{
 			patientID = Integer.toString(newID);
 			
 			try {
-				String insertNewPatient = "insert into patient (patient_ID, name, gtype, age, address, number_of_appts) values (" + patientID + ", '" + patientName + "', '" + patientGender + "', " + patientAge + ", '" + patientAddress + "')";
+				String insertNewPatient = "insert into patient (patient_ID, name, gtype, age, address, number_of_appts) values (" + patientID + ", '" + patientName + "', '" + patientGender + "', " + patientAge + ", '" + patientAddress + "', 0)";
 				esql.executeUpdate(insertNewPatient);
 
 				System.out.println("Updated patient table with new patient: ");
@@ -1057,7 +1057,7 @@ public class DBproject{
 			inputDate = input.nextLine();
 		}
 
-		System.out.println("List of available appointments for department " + departmentName);
+		System.out.println("List of available appointments for department " + departmentName + ": ");
 		try{
 			String query = "select appnt_id, time_slot " + 
 					"from appointment join has_appointment on appointment.appnt_ID = has_appointment.appt_id " + 
@@ -1066,7 +1066,8 @@ public class DBproject{
 					"join department " +
 					"on doctor.did = dept_ID " + 
 					"where appointment.status = 'AV' and appointment.adate = '" + inputDate + "' and department.name = '" + departmentName + "'";
-			esql.executeQuery(query);
+			int rowcount = esql.executeQueryAndPrintResult(query);
+			System.out.println("Rowcount: " + rowcount);
 		} catch(Exception e){
 			System.err.println(e.getMessage());
 		}
