@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -546,8 +547,70 @@ public class DBproject{
 	}
 			
 	
-	public static boolean getValidTimeslot(String input){
-		return true;
+	public static boolean getValidTimeslot(String inputTimeslot){
+		int symbolcolon = 0;
+		int symboldash = 0;
+		switch(inputTimeslot.length()){
+			case 9:
+			for(int i = 0; i < inputTimeslot.length(); i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				}
+				else if(((inputTimeslot.charAt(i) == '-') && (i == 4)) ||
+					 ( inputTimeslot.charAt(i) == ':') && ((i == 1) || (i == 6))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symbolcolon == 3){
+				return true;
+			}
+			return false;
+		
+			case 10:
+			for(int i = 0; i < inputTimeslot.length();i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				} else if(((i == 5) && (inputTimeslot.charAt(i) == '-')) || 
+					((i == 4) && (inputTimeslot.charAt(i) == '-'))){
+					symboldash++;
+				}
+				else if(((i == 1) && (inputTimeslot.charAt(i) == ':')) || 
+					((i == 2) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 6) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 7) && (inputTimeslot.charAt(i) == ':'))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symboldash == 1 && symbolcolon == 2){
+				return true;
+			}
+			return false;
+			
+			case 11:
+			for(int i = 0; i < inputTimeslot.length(); i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				} else if(((i == 2) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 5) && (inputTimeslot.charAt(i) == '-')) ||
+					((i == 8) && (inputTimeslot.charAt(i) == ':'))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symbolcolon == 3){
+				return true;
+			}
+			return false;
+
+			default:
+			return false;				
+		}
+			
 	}
 	
 	public static boolean getValidAppointmentStatus(String input){
@@ -571,7 +634,9 @@ public class DBproject{
 		}catch(Exception e){
 			System.err.println(e.getMessage());
 		}
-		return resultset.get(0).get(0) + 1;		
+		
+		int x = Integer.parseInt(resultset.get(0).get(0)) + 1;
+		return String.valueOf(x);		
 	}
 				
 
@@ -633,24 +698,6 @@ public class DBproject{
 		return false;
 	}
   
-	public static boolean validDoctor(DBproject esql, String input){
-		List<List<String>> resultset = new ArrayList<List<String>>();
-		try{
-			String query = "select doctor_ID from doctor";
-			resultset = esql.executeQueryAndReturnResult(query);
-		} catch (Exception e){
-			System.err.println(e.getMessage());
-		}
-		
-		for (List<String> doctorID : resultset){
-			for(int i = 0; i < doctorID.size(); i++){
-				if((input).equals(doctorID.get(i))){
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 	public static boolean validAppointment(DBproject esql, String inputID){
 		List<List<String>> resultset = new ArrayList<List<String>>();
 		try{
@@ -846,7 +893,6 @@ public class DBproject{
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {//6
 		// For a department name and a specific date, find the list of available appointments of the departmentkjhjkjkljk
-=======
 		Scanner input = new Scanner (System.in);
 		System.out.println("Enter department name: ");
 		String departmentName = input.nextLine();
@@ -917,16 +963,14 @@ public class DBproject{
 
 		while (!getValidAppointmentStatus(stat)) {
 			System.out.println("Invalid appointment status! Please retry (PA/AC/AV/WL): ");
-			stat = in.nextLine();
-		}
-		
 		String query = "select doctor.name, count(distinct searches.pid) as number_of_patients from doctor join has_appointment on doctor.doctor_id = has_appointment.doctor_id join appointment on has_appointment.appt_id = appointment.appnt_id join searches on appointment.appnt_id = searches.aid where appointment.status = '" + stat  + "' group by doctor.name, doctor.doctor_id order by doctor.doctor_id";	
 		try {
 			esql.executeQueryAndPrintResult(query);
 		} catch(Exception e) {
                         System.err.println(e.getMessage());
                 }
-	}
+		}
+	}	
 
 	public static boolean isCharInput(String input){
 		input = input.toLowerCase();
