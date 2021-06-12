@@ -337,7 +337,7 @@ public class DBproject{
 		return false;
 	}
 
-	public static String newDoctorID(DBproject esql) { // should change to newDoctorID
+	public static String newDoctorID(DBproject esql) {
 		List<List<String>> resultset = new ArrayList<List<String>>();
 
 		try {
