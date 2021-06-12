@@ -422,10 +422,10 @@ public class DBproject{
 			patientName = input.nextLine();
 		
 	
-			if(!isCharInput(patientName)){
+			if(!validString(patientName)){
 				System.out.println("Invalid name! No numbers or symbols!");
 			}
-		}while(!isCharInput(patientName));
+		}while(!validString(patientName));
 		
 
 		char patientGender = 'X';
@@ -718,25 +718,6 @@ public class DBproject{
 		return false;
 	}
   
-	 public static boolean validAvailableAppointment(DBproject esql, String inputID){
-                List<List<String>> resultset = new ArrayList<List<String>>();
-                try{
-                        String query = "select appnt_id from appointment";
-                        resultset = esql.executeQueryAndReturnResult(query);
-                } catch(Exception e){
-                        System.err.println(e.getMessage());
-                }
-
-                for(List<String> appnt_id : resultset){
-                        for(int i = 0; i < appnt_id.size(); i++){
-                                if((inputID).equals(appnt_id.get(i))){
-                                        return false;
-                                }
-                        }
-                }
-
-                return true;
-        }
 	public static boolean updateStatus(DBproject esql, String inputAppointmentID, String inputDoctorID){
 		String query;
 		List<List<String>> resultset = new ArrayList<List<String>>();
@@ -971,24 +952,4 @@ public class DBproject{
                 }
 		}
 	}	
-
-	public static boolean isCharInput(String input){
-		input = input.toLowerCase();
-		char[] search = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
-		int count = 0;
-		for(int i = 0; i < input.length(); i++){
-			char x = input.charAt(i);
-			for(int j = 0; j < search.length; j++){
-				if(x == search[j]){
-					count++;
-				}
-			}
-		}
-		if(count == input.length()){
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
 }
