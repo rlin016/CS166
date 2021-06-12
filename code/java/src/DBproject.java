@@ -337,7 +337,7 @@ public class DBproject{
 		return false;
 	}
 
-	public static String getValidDoctorID(DBproject esql) { // should change to newDoctorID
+	public static String newDoctorID(DBproject esql) { // should change to newDoctorID
 		List<List<String>> resultset = new ArrayList<List<String>>();
 
 		try {
@@ -372,7 +372,7 @@ public class DBproject{
 
 
 	public static void AddDoctor(DBproject esql) {//1
-		String lastID = getValidDoctorID(esql);
+		String lastID = newDoctorID(esql);
 		int newID = Integer.parseInt(lastID) + 1;
 
 		Scanner in = new Scanner(System.in);
