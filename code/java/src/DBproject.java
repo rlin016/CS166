@@ -913,8 +913,8 @@ public class DBproject{
 		} catch(Exception e){
                 	System.err.println(e.getMessage());
                 }
-
-		if (resultset.get(0).get(0).length() == 0) {
+			
+		if (resultset.isEmpty()) {
 			//need to link appointment with doctor
 			try {
 				String query2 = "insert into has_appointment(appt_id, doctor_id) values (" + appid + ", " + docid + ")";
