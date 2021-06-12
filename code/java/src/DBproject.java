@@ -864,10 +864,11 @@ public class DBproject{
 		} catch(Exception e){
 			System.err.println(e.getMessage());
 		}
-		if(resultset.get(0).get(0) == "PA"){	
+
+		if(resultset.get(0).get(0).equals("PA")){	
 			return false; //didn't have to update anything
 		}
-		else if(resultset.get(0).get(0) == "AC"){
+		else if(resultset.get(0).get(0).equals("AC")){
 			try{
 				query = "update appointment set status = 'WL' " +
 					"where appnt_ID = " + inputAppointmentID;
@@ -882,8 +883,10 @@ public class DBproject{
 			} catch(Exception e){
 				System.err.println(e.getMessage());
 			}
+			
+			return true;
 		}
-		else if(resultset.get(0).get(0) == "AV"){
+		else if(resultset.get(0).get(0).equals("AV")){
                         try{
                                 query = "update appointment set status = 'AC' " +
                                         "where appnt_id = " + inputAppointmentID;
@@ -897,9 +900,11 @@ public class DBproject{
                         } catch(Exception e){
                                 System.err.println(e.getMessage());
                         }
+			
+			return true;
 		}
-		else if(resultset.get(0).get(0) == "WL"){
-                       return false;
+		else if(resultset.get(0).get(0).equals("WL")){
+                       return true;
 		} //returns true if the has_apponitments table needs to be updated		
 		return false;
 	}
@@ -916,6 +921,7 @@ public class DBproject{
 			
 		if (resultset.isEmpty()) {
 			//need to link appointment with doctor
+			/*
 			try {
 				String query2 = "insert into has_appointment(appt_id, doctor_id) values (" + appid + ", " + docid + ")";
 				esql.executeUpdate(query2);
@@ -925,7 +931,7 @@ public class DBproject{
 				System.out.println("Rowcount: " + rowcount);
 			} catch(Exception e){
                         	System.err.println(e.getMessage());
-                	}
+                	}*/
 		} else if (!resultset.get(0).get(0).equals(docid)) {
 			return false;
 		}
@@ -1039,24 +1045,96 @@ public class DBproject{
 			appointmentID = input.nextLine();	
 		}
 
-		if (!validHasAppointment(esql, doctorID, appointmentID)) {
-			System.out.println("This appointment already exists under a different doctor. Please retry.");
-		} else {
-			updateStatus(esql, appointmentID, doctorID); // updates appointment
-			//update searches table as well
-			String hid = getHospitalID(esql, doctorID); 
-			try {
-				String updateSearches = "insert into searches(hid, pid, aid) values (" + hid + ", " + patientID + ", " + appointmentID + ")";
-				esql.executeUpdate(updateSearches);
+		if (validTimeslot(esql, appointmentID, doctorID) && validPatientNumber(esql, doctorID)) {
+			if (!validHasAppointment(esql, doctorID, appointmentID)) {
+                        	System.out.println("This appointment already exists under a different doctor. Please retry.");
+                	} else {
+				if (updateStatus(esql, appointmentID, doctorID)) {// updates appointment
+				//update searches table as well
+					String hid = getHospitalID(esql, doctorID); 
+					try {
+						String updateSearches = "insert into searches(hid, pid, aid) values (" + hid + ", " + patientID + ", " + appointmentID + ")";
+						esql.executeUpdate(updateSearches);
 			
-				System.out.println("Updated searches table: ");
-				String getNewSearches = "select * from searches where hid = " + hid + " and pid = " + patientID + " and aid = " + appointmentID;
-				int rowcount = esql.executeQueryAndPrintResult(getNewSearches);
-				System.out.println("Rowcount: " + rowcount); 
-			} catch(Exception e){
-                                System.err.println(e.getMessage());
-                        }
+						System.out.println("Updated searches table: ");
+						String getNewSearches = "select * from searches where hid = " + hid + " and pid = " + patientID + " and aid = " + appointmentID;
+						int rowcount = esql.executeQueryAndPrintResult(getNewSearches);
+						System.out.println("Rowcount: " + rowcount); 
+					} catch(Exception e){
+                        	        	System.err.println(e.getMessage());
+                        		}
+
+					try {
+                                		String query2 = "insert into has_appointment(appt_id, doctor_id) values (" + appointmentID + ", " + doctorID + ")";
+                                		esql.executeUpdate(query2);
+                  		              	System.out.println("Updated has_appointment table: ");
+                        		        String query3 = "select * from has_appointment where appt_id = " + appointmentID;
+                        		        int rowcount = esql.executeQueryAndPrintResult(query3);
+                  			        System.out.println("Rowcount: " + rowcount);
+            		            	} catch(Exception e){
+                                		System.err.println(e.getMessage());
+                        		}
+				} else {
+					System.out.println("Appointment is already PA status. Unable to schedule appointment.");
+				}
+			}
+		} else {
+			System.out.println("Doctor ID " + doctorID +  " either does not have an open timeslot at the time of appointment " + appointmentID + " or already has the maximum number of patients/appointments for that timeslot. Unable to schedule appointment " + appointmentID + " with Doctor ID " + doctorID + ".");
 		}
+	}
+
+	public static boolean validTimeslot(DBproject esql, String appid, String docid) {
+		String getAppTimeslot = "select time_slot from appointment where appnt_ID = " + appid;
+		List<List<String>> appTimeslotResult = new ArrayList<List<String>>();
+
+		String getDocTimeslot = "select time_slot from request_maintenance where did = " + docid;
+		List<List<String>> docTimeslotResult = new ArrayList<List<String>>();
+
+		try {
+			appTimeslotResult = esql.executeQueryAndReturnResult(getAppTimeslot);
+			docTimeslotResult = esql.executeQueryAndReturnResult(getDocTimeslot);
+		} catch(Exception e){
+                	System.err.println(e.getMessage());
+                }	
+
+		if (docTimeslotResult.isEmpty()) {
+			return false;
+		}
+
+		for (List<String> dtime : docTimeslotResult) {
+			for (String timeslot : dtime) {
+				if (timeslot.equals(appTimeslotResult.get(0).get(0))) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean validPatientNumber(DBproject esql, String docid) {
+		String getMaxNum = "select patient_per_hour from request_maintenance where did = " + docid;
+		List<List<String>> getNumPatientsResult = new ArrayList<List<String>>();
+
+		String getTotalAppointments = "select count(appt_id) from has_appointment where doctor_id = " + docid;
+		List<List<String>> getTotalAppointmentsResult = new ArrayList<List<String>>();
+
+		try {
+			getNumPatientsResult = esql.executeQueryAndReturnResult(getMaxNum);
+			getTotalAppointmentsResult = esql.executeQueryAndReturnResult(getTotalAppointments);
+		} catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+		
+		if (getNumPatientsResult.isEmpty()) {
+			return false;
+		} else if (getTotalAppointmentsResult.isEmpty()) {
+			return true;
+		} else if (Integer.parseInt(getNumPatientsResult.get(0).get(0)) > Integer.parseInt(getTotalAppointmentsResult.get(0).get(0))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
