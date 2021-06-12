@@ -326,7 +326,20 @@ public class DBproject{
 
 		return resultset.get(0).get(0);		
 	}
-	
+
+	public static String getValidPatientID(DBproject esql) { // should change to newDoctorID
+                List<List<String>> resultset = new ArrayList<List<String>>();
+
+                try {
+                        String query = "SELECT MAX(patient_ID) FROM Patient";
+                        resultset = esql.executeQueryAndReturnResult(query);
+                } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                }
+
+                return resultset.get(0).get(0);
+        }
+
 	//VALID FUNCTIONS
 	public static boolean validString(String str) {
 		if (str.length() == 0) {
@@ -763,23 +776,21 @@ public class DBproject{
 			appointmentStatus = (input.nextLine()).toUpperCase();
 		} 
 	
-		if (!validAppEntry(esql, appointmentDate, timeSlotInput, appointmentStatus)) {
-			System.out.println("Duplicate entry, invalid input. Please retry.");
-		} else {
-			try{
-				String query = "insert into appointment " +
+		
+		try{
+			String query = "insert into appointment " +
 				       "values (" + newid + ", '" + appointmentDate + "', '" +
 				       timeSlotInput + "', '" + appointmentStatus + "')";
-				esql.executeUpdate(query);
+			esql.executeUpdate(query);
 
-				System.out.println("New record inserted into Appointments: ");
-				String query2 = "select * from appointment group by appnt_ID order by appnt_ID DESC limit 1";
-				int rowcount = esql.executeQueryAndPrintResult(query2);
-				System.out.println("Rowcount: " + rowcount);
-			} catch(Exception e){
-				System.err.println(e.getMessage());
-			}
+			System.out.println("New record inserted into Appointments: ");
+			String query2 = "select * from appointment group by appnt_ID order by appnt_ID DESC limit 1";
+			int rowcount = esql.executeQueryAndPrintResult(query2);
+			System.out.println("Rowcount: " + rowcount);
+		} catch(Exception e){
+			System.err.println(e.getMessage());
 		}
+		
 	}	
 	
 	public static boolean updateStatus(DBproject esql, String inputAppointmentID, String inputDoctorID){
@@ -787,8 +798,7 @@ public class DBproject{
 		List<List<String>> resultset = new ArrayList<List<String>>();
 		try{
 			query = "select status from appointment " +
-				"join has_appointment on has_appointment.doctor_id = " + inputDoctorID +
-				"where appointment.appnt_id = " + inputAppointmentID;
+				"where appnt_id = " + inputAppointmentID;
 			resultset = esql.executeQueryAndReturnResult(query);
 		} catch(Exception e){
 			System.err.println(e.getMessage());
@@ -799,39 +809,88 @@ public class DBproject{
 		else if(resultset.get(0).get(0) == "AC"){
 			try{
 				query = "update appointment set status = 'WL' " +
-					"join has_appointment on has_appointment.appt_id = appointment.appnt_id " +
-					"where appointment.appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
-					inputDoctorID;
-				try{
-					esql.executeUpdate(query);
-				} catch(Exception e){
-					System.err.println(e.getMessage());
-				}
-					return true;
-			
-					
+					"where appnt_ID = " + inputAppointmentID;
+				
+				esql.executeUpdate(query);
+				
+				System.out.println("Updated appointment record: ");
+				String query2 = "select * from appointment where appnt_ID = " + inputAppointmentID;
+				int rowcount = esql.executeQueryAndPrintResult(query2);
+				System.out.println("Rowcount: " + rowcount);
+	
 			} catch(Exception e){
 				System.err.println(e.getMessage());
 			}
 		}
-
 		else if(resultset.get(0).get(0) == "AV"){
                         try{
                                 query = "update appointment set status = 'AC' " +
-                                        "join has_appointment on has_appointment.appt_id = appointment.appnt_id " +
-                                        "where appointment.appnt_id = " + inputAppointmentID + " and has_appointment.doctor_id = " +
-                                        inputDoctorID;
-	                                esql.executeUpdate(query);
-        	                        return true;
-
+                                        "where appnt_id = " + inputAppointmentID;
+	                        
+				esql.executeUpdate(query);
+				
+				System.out.println("Updated appointment record: ");
+                                String query2 = "select * from appointment where appnt_ID = " + inputAppointmentID;
+                                int rowcount = esql.executeQueryAndPrintResult(query2);
+                                System.out.println("Rowcount: " + rowcount);	
                         } catch(Exception e){
                                 System.err.println(e.getMessage());
                         }
 		}
 		else if(resultset.get(0).get(0) == "WL"){
-                       return true;
+                       return false;
 		} //returns true if the has_apponitments table needs to be updated		
 		return false;
+	}
+
+	public static boolean validHasAppointment(DBproject esql, String docid, String appid) {
+		String query = "select doctor_id from has_appointment where appt_id = " + appid;
+		List<List<String>> resultset = new ArrayList<List<String>>();
+
+		try {
+			resultset = esql.executeQueryAndReturnResult(query);
+		} catch(Exception e){
+                	System.err.println(e.getMessage());
+                }
+
+		if (resultset.get(0).get(0).length() == 0) {
+			//need to link appointment with doctor
+			try {
+				String query2 = "insert into has_appointment(appt_id, doctor_id) values (" + appid + ", " + docid + ")";
+				esql.executeUpdate(query2);
+				System.out.println("New record inserted into has_appointment: ");
+				String query3 = "select * from has_appointment where appt_id = " + appid;
+				int rowcount = esql.executeQueryAndPrintResult(query3);
+				System.out.println("Rowcount: " + rowcount);
+			} catch(Exception e){
+                        	System.err.println(e.getMessage());
+                	}
+		} else if (!resultset.get(0).get(0).equals(docid)) {
+			return false;
+		}
+		return true;
+	}
+
+	public static String getHospitalID(DBproject esql, String docid) {
+		String getDepartment = "select did from doctor where doctor_ID = " + docid;
+		List<List<String>> resultset = new ArrayList<List<String>>();
+
+		try {
+			resultset = esql.executeQueryAndReturnResult(getDepartment);
+		} catch(Exception e){
+                	System.err.println(e.getMessage());
+                }
+
+		String getHospital = "select hid from department where dept_ID = " + resultset.get(0).get(0);
+		List<List<String>> resultset1 = new ArrayList<List<String>>();
+
+		try {
+			resultset1 = esql.executeQueryAndReturnResult(getHospital);
+		} catch(Exception e){
+                        System.err.println(e.getMessage());
+                }
+
+		return resultset1.get(0).get(0);
 	}
 
 	public static void MakeAppointment(DBproject esql) {//4
@@ -839,42 +898,103 @@ public class DBproject{
 		Scanner input = new Scanner(System.in);	
 		System.out.print("Please enter patient name: ");
 		String patientName = input.nextLine();
-		String patientID;
-		if(!(validPatient(esql, patientName))){
-			System.out.println("Patient not found! Please follow on-screen instructions: ");
-			AddPatient(esql);
-			try{
-				String patientIDQuery = "select count(*) from patient";
-				List<List<String>> resultset = new ArrayList<List<String>>();
-				resultset = esql.executeQueryAndReturnResult(patientIDQuery);		
-				patientID = resultset.get(0).get(0);
-			}catch(Exception e){
-				System.err.println(e.getMessage());
+		
+		while (!validString(patientName)) {
+			System.out.println("Invalid input, please re-enter Patient name: ");
+			patientName = input.nextLine();
+		}
+		
+		System.out.println("Enter patient gender: ");
+		char patientGender = 'X';
+		while (patientGender == 'X') {
+			patientGender = input.next().charAt(0);
+			input.nextLine();
+			if(patientGender == 'f' || patientGender == 'F'){
+				patientGender = 'F';
 			}
+			else if(patientGender == 'm' || patientGender == 'M'){
+				patientGender = 'M';
+			}
+			else{
+				patientGender = 'X';
+				System.out.println("Invalid gender! Please re-enter patient gender (F/M): ");
+			}
+		}
+
+		System.out.println("Enter patient age: ");
+		int patientAge = Integer.parseInt(input.nextLine());
+		while (patientAge < 0 || patientAge > 150) {
+			System.out.println("Invalid input! Please re-enter patient age: ");
+			patientAge = Integer.parseInt(input.nextLine());
+		}
+
+		System.out.println("Enter patient address: "); 
+		String patientAddress = input.nextLine();
+
+		//get whether or not patient exists
+
+		boolean exists = validPatientEntry(esql, patientName, patientGender, patientAge, patientAddress); // exists will be false, not exists will be true
+		List<List<String>> patientIDresultset = new ArrayList<List<String>>();
+		String patientID = "";
+
+		if (!exists) { //actually is when it exists
+			//get patient ID
+			try {
+				String getPatientID = "select patient_ID from patient where name = '" + patientName + "' and gtype = '" + patientGender + "' and age = " + patientAge + " and address = '" + patientAddress + "'";
+				patientIDresultset = esql.executeQueryAndReturnResult(getPatientID);
+				patientID = patientIDresultset.get(0).get(0);
+			} catch(Exception e){
+                        	System.err.println(e.getMessage());
+                	}
+		} else {
+			int newID = Integer.parseInt(getValidPatientID(esql));
+			newID += 1;
+			patientID = Integer.toString(newID);
+			
+			try {
+				String insertNewPatient = "insert into patient (patient_ID, name, gtype, age, address, number_of_appts) values (" + patientID + ", '" + patientName + "', '" + patientGender + "', " + patientAge + ", '" + patientAddress + "')";
+				esql.executeUpdate(insertNewPatient);
+
+				System.out.println("Updated patient table with new patient: ");
+				String getRecord = "select * from patient group by patient_id order by patient_id DESC limit 1";
+				int rowcount = esql.executeQueryAndPrintResult(getRecord);
+				System.out.println("Rowcount: " + rowcount); 
+			} catch(Exception e){
+                                System.err.println(e.getMessage());
+                        }
 		}
 
 		System.out.print("Please enter doctor ID: ");
 		String doctorID = input.nextLine();
-		if(!(validDoctor(esql, doctorID))){
-			System.out.println("Doctor ID not valid! Query failed");
-			return;
+		while(!(validDoctor(esql, doctorID))){
+			System.out.println("Invalid input, please re-enter Doctor ID: ");
+			doctorID = input.nextLine();
 		}
 
 		System.out.print("Please enter desired appointment ID: "); 
 		String appointmentID = input.nextLine();
-		if(!(validAppointment(esql, appointmentID))){
-			System.out.println("Appointment ID not valid! Query failed.");
-			return;	
+		while(!(validAppointment(esql, appointmentID))){
+			System.out.println("Invalid input, please re-enter Appointment ID: ");
+			appointmentID = input.nextLine();	
 		}
-		
-		//System.out.println("Hello!");
-		if(updateStatus(esql, appointmentID, doctorID)){
-			try{
-				String query = "insert into has_appointment values (" +
-						appointmentID + ", " + doctorID + ")";
+
+		if (!validHasAppointment(esql, doctorID, appointmentID)) {
+			System.out.println("This appointment already exists under a different doctor. Please retry.");
+		} else {
+			updateStatus(esql, appointmentID, doctorID); // updates appointment
+			//update searches table as well
+			String hid = getHospitalID(esql, doctorID); 
+			try {
+				String updateSearches = "insert into searches(hid, pid, aid) values (" + hid + ", " + patientID + ", " + appointmentID + ")";
+				esql.executeUpdate(updateSearches);
+			
+				System.out.println("Updated searches table: ");
+				String getNewSearches = "select * from searches where hid = " + hid + " and pid = " + patientID + " and aid = " + appointmentID;
+				int rowcount = esql.executeQueryAndPrintResult(getNewSearches);
+				System.out.println("Rowcount: " + rowcount); 
 			} catch(Exception e){
-				System.err.println(e.getMessage());
-			}
+                                System.err.println(e.getMessage());
+                        }
 		}
 	}
 
