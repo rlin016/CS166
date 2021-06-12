@@ -475,8 +475,69 @@ public class DBproject{
 	}
 			
 	
-	public static boolean getValidTimeslot(String input){ //this is incomplete
-		return true;
+	public static boolean getValidTimeslot(String inputTimeslot){
+		int symbolcolon = 0;
+		int symboldash = 0;
+		switch(inputTimeslot.length()){
+			case 9:
+			for(int i = 0; i < inputTimeslot.length(); i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				}
+				else if(((inputTimeslot.charAt(i) == '-') && (i == 4)) ||
+					 ( inputTimeslot.charAt(i) == ':') && ((i == 1) || (i == 6))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symbolcolon == 3){
+				return true;
+			}
+			return false;
+
+			case 10:
+			for(int i = 0; i < inputTimeslot.length();i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				} else if(((i == 5) && (inputTimeslot.charAt(i) == '-')) || 
+					((i == 4) && (inputTimeslot.charAt(i) == '-'))){
+					symboldash++;
+				}
+				else if(((i == 1) && (inputTimeslot.charAt(i) == ':')) || 
+					((i == 2) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 6) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 7) && (inputTimeslot.charAt(i) == ':'))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symboldash == 1 && symbolcolon == 2){
+				return true;
+			}
+			return false;
+
+			case 11:
+			for(int i = 0; i < inputTimeslot.length(); i++){
+				if(Character.isDigit(inputTimeslot.charAt(i))){
+				} else if(((i == 2) && (inputTimeslot.charAt(i) == ':')) ||
+					((i == 5) && (inputTimeslot.charAt(i) == '-')) ||
+					((i == 8) && (inputTimeslot.charAt(i) == ':'))){
+					symbolcolon++;
+				}
+				else{
+					return false;
+				}
+			}
+			if(symbolcolon == 3){
+				return true;
+			}
+			return false;
+
+			default:
+			return false;				
+		}
 	}
 	
 	public static boolean getValidAppointmentStatus(String input){
@@ -1021,7 +1082,7 @@ public class DBproject{
 		System.out.println("Date 2: ");				
 		String second = in.nextLine();
 
-                while(!getValidDate(first)) {
+                while(!getValidDate(second)) {
                         System.out.print("Invalid date! Please follow format (YYYY-MM-DD)! Date 2: ");
                         second = in.nextLine();
                 }
